@@ -1,0 +1,195 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --------------------
+// ENUMS
+// --------------------
+
+enum MembershipRole {
+  ORG_ADMIN
+  TENANT_ADMIN
+  MEMBER
+
+  @@map("membership_role")
+}
+
+// --------------------
+// ORGANIZATION
+// --------------------
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenants     Tenant[]
+  memberships Membership[]
+
+  @@map("organizations")
+}
+
+// --------------------
+// TENANT
+// --------------------
+
+model Tenant {
+  id             String   @id @default(uuid())
+  name           String
+  organizationId String   @map("organization_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  memberships   Membership[]
+  boards        Board[]
+  columns       Column[]
+  tasks         Task[]
+  activityLogs  ActivityLog[]
+
+  // Needed for composite foreign keys
+  @@unique([id, organizationId])
+  @@index([organizationId])
+  @@map("tenants")
+}
+
+// --------------------
+// USER
+// --------------------
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  memberships  Membership[]
+  activityLogs ActivityLog[]
+
+  @@map("users")
+}
+
+// --------------------
+// MEMBERSHIP
+// --------------------
+
+model Membership {
+  id             String         @id @default(uuid())
+  userId         String         @map("user_id")
+  organizationId String         @map("organization_id")
+  tenantId       String?        @map("tenant_id")
+  role           MembershipRole
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  user         User         @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+  tenant       Tenant?      @relation(fields: [tenantId], references: [id])
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([tenantId])
+  @@map("memberships")
+}
+
+// --------------------
+// BOARD
+// --------------------
+
+model Board {
+  id        String   @id @default(uuid())
+  name      String
+  tenantId  String   @map("tenant_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  columns Column[]
+
+  @@unique([id, tenantId])
+  @@index([tenantId])
+  @@map("boards")
+}
+
+// --------------------
+// COLUMN
+// --------------------
+
+model Column {
+  id        String   @id @default(uuid())
+  name      String
+  tenantId  String   @map("tenant_id")
+  boardId   String   @map("board_id")
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  board  Board  @relation(
+    fields: [boardId, tenantId],
+    references: [id, tenantId]
+  )
+
+  tasks Task[]
+
+  @@unique([id, tenantId])
+  @@index([boardId, tenantId])
+  @@map("columns")
+}
+
+// --------------------
+// TASK
+// --------------------
+
+model Task {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  tenantId    String   @map("tenant_id")
+  columnId    String   @map("column_id")
+  position    Int      @default(0)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  column Column @relation(
+    fields: [columnId, tenantId],
+    references: [id, tenantId]
+  )
+
+  @@index([columnId, tenantId])
+  @@map("tasks")
+}
+
+// --------------------
+// ACTIVITY LOG
+// --------------------
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  tenantId   String   @map("tenant_id")
+  userId     String   @map("user_id")
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  action     String
+  oldValues  Json?    @map("old_values")
+  newValues  Json?    @map("new_values")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([tenantId, createdAt])
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@map("activity_logs")
+}
