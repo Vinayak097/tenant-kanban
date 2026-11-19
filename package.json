@@ -20,9 +20,11 @@
   "homepage": "https://github.com/Vinayak097/tenant-kanban#readme",
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "prisma": "^8.0.0-rc.34",
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "@prisma/client": "^7.10.1",
     "@types/express": "^5.0.6",
     "express": "^5.3.0"
   }
