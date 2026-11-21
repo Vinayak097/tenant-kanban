@@ -2,15 +2,16 @@
   "name": "tenet",
   "version": "1.0.0",
   "description": "��#\u0000 \u0000t\u0000e\u0000n\u0000a\u0000n\u0000t\u0000-\u0000k\u0000a\u0000n\u0000b\u0000a\u0000n\u0000\r\u0000 \u0000",
-    "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
+    "test": "npm run build && node --test test/*.test.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "db:seed": "npm run build && node prisma/seed.js"
   },
   "repository": {
     "type": "git",
@@ -26,19 +27,29 @@
   "homepage": "https://github.com/Vinayak097/tenant-kanban#readme",
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
     "prisma": "^7.10.1",
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "@types/express": "^5.0.6",
+    "argon2": "^0.45.2",
+    "bcryptjs": "^3.0.3",
     "cookie": "^2.0.2",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
     "dotenv": "^18.0.10",
     "express": "^5.3.0",
     "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1",
     "socket.io": "^4.8.4"
+  },
+  "overrides": {
+    "effect": "3.22.1"
   }
 }
